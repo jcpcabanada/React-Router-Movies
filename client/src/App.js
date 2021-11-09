@@ -1,36 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import axios from 'axios';
+import { Route } from 'react-router-dom';
 
 import SavedList from './Movies/SavedList';
+import MovieList from './Movies/MovieList'
+import Movie from './Movies/Movie';
 
-export default function App () {
-  const [saved, setSaved] = useState([]); // Stretch: the ids of "saved" movies
-  const [movieList, setMovieList] = useState([]);
+export default function App() {
+    const [saved, setSaved] = useState([]); // Stretch: the ids of "saved" movies
+    const [movieList, setMovieList] = useState([]);
 
-  useEffect(() => {
-    const getMovies = () => {
-      axios
-        .get('http://localhost:5000/api/movies') // Study this endpoint with Postman
-        .then(response => {
-          // Study this response with a breakpoint or log statements
-          // and set the response data as the 'movieList' slice of state
+    useEffect(() => {
+        const getMovies = () => {
+            axios
+                .get('http://localhost:5000/api/movies') // Study this endpoint with Postman
+                .then(response => {
+                    // Study this response with a breakpoint or log statements
+                    // and set the response data as the 'movieList' slice of state
+                    setMovieList(response.data);
+
+                    // console.log(response.data);
+                })
+                .catch(error => {
+                    console.error('Server Error', error);
+                });
+        }
+        getMovies();
+    }, []);
+    console.log(movieList);
+
+    const addToSavedList = id => {
+        // This is stretch. Prevent the same movie from being "saved" more than once
+        const alreadySaved = saved.find(movie => {
+            return movie.id === id
         })
-        .catch(error => {
-          console.error('Server Error', error);
-        });
-    }
-    getMovies();
-  }, []);
+        if (alreadySaved) return;
 
-  const addToSavedList = id => {
-    // This is stretch. Prevent the same movie from being "saved" more than once
-  };
+        const foundMovie = movieList.find(movie => movie.id === id);
+        setSaved([...saved, foundMovie])
+    };
 
-  return (
-    <div>
-      <SavedList list={[ /* This is stretch */]} />
+    return (
+        <div>
+            <SavedList list={saved}/>
 
-      <div>Replace this Div with your Routes</div>
-    </div>
-  );
+            <Route exact path = "/">
+                <MovieList movies={movieList}/>
+            </Route>
+            <Route path ="/movies/:id">
+                <Movie saveMovie={addToSavedList}/>
+            </Route>
+        </div>
+    );
 }
